@@ -1,0 +1,27 @@
+{
+  "name": "dsh-kanban-watcher",
+  "version": "0.1.0",
+  "description": "DSH ↔ Hermes 双 Agent 协作管道的看板执行侧插件：监听 Hermes kanban 队列，把任务交给 DSH Agent 在 Web GUI 会话中执行，并把结果回写看板与 done 文件。",
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "hermes",
+    "kanban",
+    "multi-agent",
+    "plugin"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/dsh-agent": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-llm": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-session": "0.1.0-rc.6",
+    "@deepseek-ai/schemastery": "*"
+  }
+}

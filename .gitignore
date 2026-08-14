@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+*.log
+
+# DSH 运行时状态（本地机器专用，不含源码）
+.dsh/
+kanban-trigger/
+kanban-done/
+kanban-watcher.lock
+sessions/
+
+# Hermes 本地数据
+.hermes/
+state.db
+*.db
+*.sqlite3
+
+# 系统/编辑器
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# 大文件/打包产物
+*.json.zstd
+*.tar.gz
+*.zip
+
+# 密钥/环境文件
+.env
+.env.*
+*.pem
+*.key
+*.crt

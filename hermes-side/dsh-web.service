@@ -1,0 +1,29 @@
+[Unit]
+Description=DeepSeek Harness Web UI (DSH)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+# ============================================================
+# 模板文件：使用前必须编辑（EDIT ME）
+# systemd 不会展开 $VAR 占位符，请替换为你的真实绝对路径。
+#   <DSH_BIN>        → dsh 可执行文件绝对路径（`which dsh` 或 npm 全局目录）
+#   <NPM_PREFIX>     → npm 全局前缀（`npm prefix -g`）
+# 替换完成后先验证：systemd-analyze verify dsh-web.service
+# ============================================================
+Type=simple
+ExecStart=<DSH_BIN> web --port 3080
+# WorkingDirectory 缺省即用户家目录；如需显式指定用绝对路径，如 /home/alice
+WorkingDirectory=/home/alice
+Environment="PATH=<NPM_PREFIX>/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Restart=always
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=60
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

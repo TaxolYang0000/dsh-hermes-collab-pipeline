@@ -1,0 +1,104 @@
+diff --git a/cli.py b/cli.py
+index 2e822be374..9d57d9def0 100644
+--- a/cli.py
++++ b/cli.py
+@@ -11062,6 +11062,63 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
+         except Exception:
+             pass  # Non-fatal — never break the main loop
+ 
++    def _drain_done_notifications(self, consumer: str) -> None:
++        """Queue external task-completion notifications (DSH done files) into this CLI session.
++
++        External agents (e.g. DSH kanban watcher) write ``<id>.done`` JSON files
++        into ``~/.dsh/kanban-done/`` when a delegated task completes. This drain
++        is polled from the process_loop idle branch (alongside
++        ``_drain_process_notifications``) and injects a synthetic user message
++        into ``_pending_input`` so the running session learns the task finished
++        without polling the board or waiting for manual input.
++
++        Security: done-file JSON is treated as untrusted input — only
++        ``id``/``title``/``result`` fields are read, values are truncated and
++        control characters stripped. Nothing from the file is executed.
++
++        Gated by ``features.external_event_steer`` in config.yaml (default off).
++        """
++        try:
++            cfg = getattr(self, "config", None) or {}
++            if not (cfg.get("features", {}) or {}).get("external_event_steer", False):
++                return
++            done_dir = os.environ.get(
++                "HERMES_DONE_WATCH_DIR",
++                os.path.expanduser("~/.dsh/kanban-done"),
++            )
++            if not os.path.isdir(done_dir):
++                return
++            seen_key = "_done_seen_files"
++            seen = getattr(self, seen_key, None)
++            if seen is None:
++                seen = set(os.listdir(done_dir))  # startup baseline: don't replay old events
++                setattr(self, seen_key, seen)
++            for name in os.listdir(done_dir):
++                if not name.endswith(".done") or name in seen:
++                    continue
++                try:
++                    with open(os.path.join(done_dir, name), encoding="utf-8") as f:
++                        data = json.load(f)
++                    # Only mark as seen AFTER successful parse — otherwise a
++                    # half-written file (non-atomic write) would be skipped
++                    # forever and its notification permanently lost.
++                    seen.add(name)
++                    task_id = str(data.get("id", "?"))[:40]
++                    title = str(data.get("title", ""))[:60]
++                    result = str(data.get("result", ""))[:200]
++                    # strip control chars from all injected text
++                    clean = lambda s: "".join(ch for ch in s if ch >= " " and ch != "\x1b")
++                    msg = (
++                        f"【外部通知】任务 {clean(task_id)}「{clean(title)}」已完成。"
++                        f"结果摘要：{clean(result)}"
++                    )
++                    if msg.strip():
++                        self._pending_input.put(msg)
++                except Exception:
++                    pass  # malformed file — skip, never break the loop
++        except Exception:
++            pass  # Non-fatal — never break the main loop
++
+     def _maybe_continue_goal_after_turn(self) -> None:
+         """Hook run after every CLI turn. Judges + maybe re-queues.
+ 
+@@ -17727,6 +17784,12 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
+                                 self._drain_process_notifications("cli-idle")
+                             except Exception:
+                                 pass
++                            # Check for external task-completion notifications
++                            # (DSH done files) while agent is idle.
++                            try:
++                                self._drain_done_notifications("cli-idle")
++                            except Exception:
++                                pass
+                         continue
+ 
+                     # Voice-transcribed messages arrive wrapped in a sentinel
+diff --git a/hermes_cli/config_defaults.py b/hermes_cli/config_defaults.py
+index 18ac017853..e94f2b0477 100644
+--- a/hermes_cli/config_defaults.py
++++ b/hermes_cli/config_defaults.py
+@@ -290,6 +290,18 @@ DEFAULT_CONFIG = {
+         "reasoning_overrides": {},
+     },
+ 
++    # Feature toggles. Default off unless documented otherwise.
++    "features": {
++        # External event steering: when enabled, the CLI session drains
++        # ``~/.dsh/kanban-done/`` for ``<id>.done`` JSON files written by
++        # external agents (e.g. DSH kanban watcher) and injects a synthetic
++        # user message into the running session so it learns a delegated task
++        # completed without polling or manual input.
++        # Security: done-file JSON is untrusted input; only id/title/result are
++        # read, truncated, and control-stripped. Nothing is executed.
++        "external_event_steer": False,
++    },
++
+     "terminal": {
+         "backend": "local",
+         "modal_mode": "auto",

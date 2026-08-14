@@ -1,0 +1,8 @@
+# /inbox 快命令片段（源码唯一事实源）
+# 部署：复制到 ~/.hermes/config.yaml 的 quick_commands 段（当前为空 dict，直接新增）
+# 已核实：exec 类型无参数透传，/inbox 只能无参查看；下发必须走技能 /dsh-send。
+quick_commands:
+  inbox:
+    type: exec
+    command: "hermes kanban --board dsh list"
+    description: "查看 DSH↔Hermes 任务队列（不执行，仅显示）"
