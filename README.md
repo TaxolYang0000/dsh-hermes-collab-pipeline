@@ -98,8 +98,9 @@ hermes config set features.external_event_steer true
 ## Usage examples
 
 ```bash
-# Dispatch with a specific model (DSH uses pro for heavy tasks)
-/dsh-send --model deepseek-v4-pro write a scraper for HLTV data
+# Dispatch with a model (note: plugin modelMap only maps flash + __fallback__,
+# so a model outside the map (e.g. pro) falls back to flash)
+/dsh-send --model deepseek-v4-flash write a scraper for HLTV data
 
 # Dispatch with a skill (copy a Hermes skill to the shared area for DSH to reference)
 /dsh-send --skill two-step-t1-dip-buy-strategy analyze the current market with this strategy
@@ -121,12 +122,25 @@ hermes config set features.external_event_steer true
 ## Known limitations
 
 - The watcher executes tasks **serially** (one at a time, later tasks queue)
-- 10s polling + fs.watch: near-real-time, not real-time
+- 30s fallback polling + fs.watch: near-real-time, not real-time
 - SQLite multi-process writes have lock contention (busy_timeout + retry fallback)
 - External event injection only works in Hermes CLI sessions, not gateway platforms
 - After plugin code updates, **restart dsh web** for the change to take effect (node does not hot-reload)
 
 (The watcher falls back to 30s polling when fs.watch events are coalesced/lost.)
+
+## Why not an off-the-shelf solution
+
+- **Community MCP server (dsh-harness-mcp-server) not used**: its dependency
+  `^0.0.1-rc.1` does not match DSH profile `0.1.0-rc.6` (singleton-conflict risk),
+  its task queue is in-memory (lost on restart), and sessions are reused per cwd
+  (not per task). This project's kanban board is a persisted queue that fills those gaps.
+- **Transitional positioning**: this pipeline is expected to last until DSH ships a
+  mature ACP/JSON-RPC cross-agent task protocol; then the watcher can be swapped while
+  keeping the board and skill layers.
+- **Deployment note**: Hermes gateway ships its own kanban watcher — do NOT enable the
+  Hermes dispatcher on board `dsh` (it would race the DSH watcher). The board/assignee
+  isolation design already avoids the conflict.
 
 ## Path variables
 
@@ -156,4 +170,5 @@ Repository code and docs are sanitized: real machine paths appear as `$VAR` plac
 - `INSTALL-安装指南.md` — full zero-to-install guide + known pitfalls
 - `dsh-side/docs/DSH-Hermes双Agent协作管道-能力盘点与可行性.md` — project origin (DSH capability survey + collaboration feasibility)
 - `dsh-side/plugins/dsh-kanban-watcher/README.md` — watcher plugin detailed docs (config/usage/security)
+- `hermes-side/README.md` — external_event_steer internals & security design (done-file untrusted input, seen baseline)
 - `hermes-side/PR-提交说明.md` — material for filing an issue with Hermes Agent

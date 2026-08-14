@@ -100,8 +100,9 @@ hermes config set features.external_event_steer true
 ## 使用示例
 
 ```bash
-# 带模型下发（DSH 用 pro 执行重任务）
-/dsh-send --model deepseek-v4-pro 写一个爬虫抓取 HLTV 数据
+# 带模型下发（注意：插件 modelMap 只映射 flash + __fallback__，
+# 指定 modelMap 里没有的模型（如 pro）会 fallback 到 flash 执行）
+/dsh-send --model deepseek-v4-flash 写一个爬虫抓取 HLTV 数据
 
 # 带技能下发（把 Hermes skill 复制到共享区给 DSH 参考）
 /dsh-send --skill two-step-t1-dip-buy-strategy 用这个策略分析当前行情
@@ -125,12 +126,22 @@ hermes config set features.external_event_steer true
 ## 已知限制
 
 - watcher **串行执行**任务（同一时刻只跑一个，后续排队）
-- 10s 轮询 + fs.watch：准实时，不是实时
+- 30s 兜底轮询 + fs.watch：准实时，不是实时
 - SQLite 多进程写有锁竞争（busy_timeout + 重试兜底）
 - 外部事件注入只作用于 Hermes CLI 会话，gateway 平台不走这条链路
 - 插件代码更新后必须重启 dsh web 才生效（node 不热重载）
 
 （fs.watch 事件合并/丢失时，watcher 兜底 30s 轮询。）
+
+## 为什么不用现成的方案
+
+- **社区 MCP server（dsh-harness-mcp-server）不采用**：其依赖 `^0.0.1-rc.1` 与 DSH
+  profile `0.1.0-rc.6` semver 不匹配（装上有单例冲突风险）、任务队列纯内存（重启即丢）、
+  会话按 cwd 复用（非每任务新对话）。本项目的 kanban 看板是持久化队列，正好补这些短板。
+- **过渡性定位**：本管道预期寿命 = DSH 官方 ACP/JSON-RPC 完善前（入口与执行解耦）。
+  如果 DSH 官方提供更成熟的跨 Agent 任务协议，可替换 watcher 而保留看板与技能层。
+- **部署注意**：Hermes gateway 自带 kanban watcher，勿在 board `dsh` 上启用 Hermes
+  dispatcher（会与 DSH watcher 抢任务）。本项目的 board/assignee 隔离设计已避免冲突。
 
 ## 路径变量说明
 
@@ -160,4 +171,5 @@ hermes config set features.external_event_steer true
 - `INSTALL-安装指南.md` — 从零安装完整步骤 + 已知坑
 - `dsh-side/docs/DSH-Hermes双Agent协作管道-能力盘点与可行性.md` — 项目缘起（DSH 能力盘点 + 协作可行性分析）
 - `dsh-side/plugins/dsh-kanban-watcher/README.md` — watcher 插件详细文档（配置/使用/安全）
+- `hermes-side/README.md` — external_event_steer 原理与安全设计（done 文件不可信输入、seen baseline）
 - `hermes-side/PR-提交说明.md` — 给 Hermes Agent 提 issue 的材料

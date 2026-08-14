@@ -58,7 +58,7 @@ Hermes 终端                        DSH web host                       Hermes �
 
 ```bash
 cd ~/.dsh/profiles/web
-pnpm add file:$DSH_WORKSPACE/plugins/dsh-kanban-watcher
+pnpm add file:<你的clone路径>/dsh-side/plugins/dsh-kanban-watcher
 ```
 
 > 预期输出 `dsh: warning: dsh-kanban-watcher declares no dsh.bundle` —— **属预期**，插件只需被 loader import，不需要成为补丁层。
@@ -115,7 +115,7 @@ nohup $DSH_BIN web --port 3080 > /tmp/dsh-web.log 2>&1 &
 
 ### 从 Hermes 侧下发任务（上游）
 
-Hermes 侧用技能 `/dsh-send`（见 `hermes-side/dsh-send/SKILL.md`）：
+Hermes 侧用技能 `/dsh-send`（见 `hermes-side/dsh-send-skill/SKILL.md`）：
 
 ```text
 /dsh-send --model deepseek-v4-flash 写一份本周进展周报

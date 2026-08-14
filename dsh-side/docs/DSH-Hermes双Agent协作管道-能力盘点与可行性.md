@@ -188,4 +188,4 @@ DSH 有 `bash` 工具，Hermes 提供完整 CLI，双方同属 `$USER` 用户、
 
 - 会话存档解压脚本：`scripts/decompress_session.py`（按帧边界解析 magic 0xFD2FB528，逐帧独立解压后拼接）
 - 轮次提取脚本：`scripts/extract_turns.py`（按行区间提取 JSONL 并规范化）
-- 本会话第 1 轮回答正是后续 DSH↔Hermes 协作管道（kanban watcher 插件、/dsh-send 技能）诞生的起点，详见 `docs/DSH-Hermes-协作方案.md`。
+- 本会话第 1 轮回答正是后续 DSH↔Hermes 协作管道（kanban watcher 插件、/dsh-send 技能）诞生的起点，落地方案见仓库根 README 与 INSTALL-安装指南.md。

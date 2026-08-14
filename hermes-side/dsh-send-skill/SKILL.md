@@ -29,7 +29,7 @@ version: 1.2.3
 ## 注意
 - 任务内容要自包含（DSH 没有你的会话上下文）：给出明确目标、涉及路径、期望产出（落点）。
 - 不要改看板状态（认领/完成由 DSH 侧负责）。
-- 白名单是 Hermes 侧唯一事实源；DSH watcher 的权限预设镜像同一白名单（§5.6）。
+- 白名单是 Hermes 侧唯一事实源；DSH watcher 的权限预设镜像同一白名单。
 - `--workspace` 只接受 `scratch | worktree | worktree:<path> | dir:<path>` 四种取值（实测），`dir:` 前缀用于指定工作目录。
 - `--idempotency-key` 用于幂等去重：重复 create 返回同一任务 id，不重复执行。
 - `--initial-status` 可选：`blocked` 或 `running`（默认 `ready`，实测 VALID_STATUSES 九态），通常不需要显式传。`create` 支持的全部合法参数以 `hermes kanban create --help` 为准。

@@ -10,7 +10,7 @@
 |------|------|---------|---------|---------|
 | DeepSeek Harness (DSH) | deepseek-ai/deepseek-harness | MIT | 插件机制（Cordis bundle）、agents.create/sessions/workspaceRegistry API 用法、会话存档格式（zstd 拼接帧） | API 使用 + 思路借鉴 |
 | Hermes Agent | NousResearch/hermes-agent | MIT | kanban CLI 用法、kanban_watchers.py 的 singleton lock 设计思路、CLI 空闲循环结构 | 思路借鉴（无代码复制） |
-| dsh-harness-mcp-server | chushixixin/dsh-harness-mcp-server（本地审查副本在 review/） | MIT | 权限预设挂载方式（agentPresets.mount）、会话 attach 工作区 | 思路借鉴（无代码复制） |
+| dsh-harness-mcp-server | chushixixin/dsh-harness-mcp-server | MIT | 权限预设挂载方式（agentPresets.mount）、会话 attach 工作区 | 思路借鉴（无代码复制） |
 | DSH headless summarize | @deepseek-ai/dsh 内置 | MIT | `summarize()` 函数（汇总最后 assistant 文本与结束原因） | **实质性代码参考**（lib/index.js 中标注「照抄 headless.summarize」） |
 | dsh-kanban | Ericwong5021/dsh-kanban | MIT | 无（React Web UI 看板，与我们的后台执行插件完全不同类型，仅命名相似） | 无借鉴，仅生态关联提及 |
 
