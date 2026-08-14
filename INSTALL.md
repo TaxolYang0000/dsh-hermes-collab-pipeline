@@ -41,7 +41,7 @@ dsh --version
 ## Step 2: Clone the main repository
 
 ```bash
-git clone https://github.com/TaxolYang0000/dsh-hermes-collab-pipeline.git
+git clone --recurse-submodules https://github.com/TaxolYang0000/dsh-hermes-collab-pipeline.git
 cd dsh-hermes-collab-pipeline
 ```
 

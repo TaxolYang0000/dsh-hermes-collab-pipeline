@@ -40,7 +40,7 @@ dsh --version
 ## 第 2 步：clone 主仓库
 
 ```bash
-git clone https://github.com/TaxolYang0000/dsh-hermes-collab-pipeline.git
+git clone --recurse-submodules https://github.com/TaxolYang0000/dsh-hermes-collab-pipeline.git
 cd dsh-hermes-collab-pipeline
 ```
 

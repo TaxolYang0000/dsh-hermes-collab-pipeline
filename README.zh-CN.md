@@ -74,8 +74,8 @@
 前置条件：本机已装 Hermes Agent + DSH（npm 全局 @deepseek-ai/dsh），共享 ~/.dsh 目录。
 
 ```bash
-# 0. 先 clone 本仓库（推送到 GitHub 后替换 URL）
-git clone <你的仓库地址> && cd <仓库目录>
+# 0. 先 clone 本仓库（--recurse-submodules 会拉取 dsh-kanban-watcher 插件子模块）
+git clone --recurse-submodules <你的仓库地址> && cd <仓库目录>
 
 # 1. DSH 侧：安装 watcher 插件 + 启动 web
 cd ~/.dsh/profiles/web

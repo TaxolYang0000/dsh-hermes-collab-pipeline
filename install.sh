@@ -123,12 +123,14 @@ else
   PREREQ_OK=0
 fi
 
-# 插件源码
+# 插件源码（子模块：dsh-kanban-watcher）
 PLUGIN_DIR="$REPO_DIR/dsh-side/plugins/dsh-kanban-watcher"
 if [ -f "$PLUGIN_DIR/package.json" ]; then
   log "找到插件源码: $PLUGIN_DIR"
 else
-  err "找不到插件源码: $PLUGIN_DIR（确认在仓库根目录运行本脚本）"
+  err "找不到插件源码: $PLUGIN_DIR"
+  err "插件是 git submodule，需先初始化："
+  err "  git submodule update --init --recursive   （或 clone 时加 --recurse-submodules）"
   PREREQ_OK=0
 fi
 

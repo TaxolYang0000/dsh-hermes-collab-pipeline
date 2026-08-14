@@ -72,8 +72,8 @@ Four key mechanisms:
 Prerequisites: Hermes Agent + DSH (npm global `@deepseek-ai/dsh`) installed on the same machine, sharing `~/.dsh`.
 
 ```bash
-# 0. Clone this repository first (adjust URL when you push it)
-git clone <your-repo-url> && cd <repo-dir>
+# 0. Clone this repository first (--recurse-submodules pulls the dsh-kanban-watcher plugin submodule)
+git clone --recurse-submodules <your-repo-url> && cd <repo-dir>
 
 # 1. DSH side: install the watcher plugin + start web
 cd ~/.dsh/profiles/web

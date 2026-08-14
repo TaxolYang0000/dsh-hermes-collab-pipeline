@@ -1,0 +1,3 @@
+[submodule "dsh-side/plugins/dsh-kanban-watcher"]
+	path = dsh-side/plugins/dsh-kanban-watcher
+	url = https://github.com/TaxolYang0000/dsh-kanban-watcher.git
