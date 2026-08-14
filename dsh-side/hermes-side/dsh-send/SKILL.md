@@ -11,12 +11,12 @@ version: 1.3.0
 
 ## 流程
 1. 解析用户指令里的选项（`--model`、`--provider`、`--priority`、`--max-runtime`、`--workspace dir:<path>`、`--idempotency-key <key>`、`--skill <name>`、`--resume <关键词>`），未指定则用 Hermes 当前默认模型。
-2. **落点分配与白名单校验（v1.3.4 必做）**：默认落点 = **在 DSH 工作区（/home/taxol/DSH）内新建一个合适命名的文件夹存放输出，输出路径写在结果里**（命名由 DSH agent 按任务内容自定）；如需特定路径（如桌面 /mnt/c/Users/26501/Desktop）可显式说明。所有落点必须 ∈ Hermes 侧白名单（`/home/taxol/DSH`、`/mnt/c/Users/26501/Desktop/` 及后续扩展），**不在白名单则拒绝下发**并说明原因。
-3. **技能传递（v1.3.6 方案 C，--skill <name> 可选）**：若用户指定 `--skill <name>`（如 `--skill two-step-t1-dip-buy-strategy`），把该 skill 复制到共享区 `/home/taxol/DSH/skills-shared/<name>/`（含 SKILL.md 及 references/ 等全部文件），并在任务正文写入 `【参考技能】<共享区路径>`。DSH agent 从共享区（自己领地）读 skill 内容，不跨域读 ~/.hermes。复制用 `cp -r ~/.hermes/skills/<category>/<name> /home/taxol/DSH/skills-shared/`（先按名搜 skills_list 定位 category）。找不到 skill 则报错并终止下发。
+2. **落点分配与白名单校验（v1.3.4 必做）**：默认落点 = **在 DSH 工作区（$DSH_WORKSPACE）内新建一个合适命名的文件夹存放输出，输出路径写在结果里**（命名由 DSH agent 按任务内容自定）；如需特定路径（如桌面 $DESKTOP）可显式说明。所有落点必须 ∈ Hermes 侧白名单（`$DSH_WORKSPACE`、`$DESKTOP/` 及后续扩展），**不在白名单则拒绝下发**并说明原因。
+3. **技能传递（v1.3.6 方案 C，--skill <name> 可选）**：若用户指定 `--skill <name>`（如 `--skill two-step-t1-dip-buy-strategy`），把该 skill 复制到共享区 `$DSH_WORKSPACE/skills-shared/<name>/`（含 SKILL.md 及 references/ 等全部文件），并在任务正文写入 `【参考技能】<共享区路径>`。DSH agent 从共享区（自己领地）读 skill 内容，不跨域读 ~/.hermes。复制用 `cp -r ~/.hermes/skills/<category>/<name> $DSH_WORKSPACE/skills-shared/`（先按名搜 skills_list 定位 category）。找不到 skill 则报错并终止下发。
 4. **会话继承（v1.3.0 方案 A，--resume <关键词> 可选）**：若用户指定 `--resume <关键词>`（或显式 `<session-id>`），在任务正文写入 `[会话继承:<关键词>]`。watcher 会用关键词模糊匹配同工作区历史会话标题：命中 live 会话 → 直接复用续接；冷会话 → resume 恢复上下文；未命中 → 回退新建会话。不指定则不继承（每次新对话）。
 5. 用 `hermes kanban create` 创建任务（看板 `dsh`，assignee `dsh`，模型/设置原样传入）：
    ```bash
-   hermes kanban --board dsh create "<任务内容>（输出要求：在 DSH 工作区内新建合适命名文件夹存放，路径写进结果）[会话继承:<关键词>]【参考技能】/home/taxol/DSH/skills-shared/<name>/" \
+   hermes kanban --board dsh create "<任务内容>（输出要求：在 DSH 工作区内新建合适命名文件夹存放，路径写进结果）[会话继承:<关键词>]【参考技能】$DSH_WORKSPACE/skills-shared/<name>/" \
      --assignee dsh --created-by hermes --json \
      [--model <M>] [--provider <P>] [--priority <N>] \
      [--max-runtime <dur>] [--workspace dir:<path>] \
@@ -34,5 +34,5 @@ version: 1.3.0
 - `--workspace` 只接受 `scratch | worktree | worktree:<path> | dir:<path>` 四种取值（实测），`dir:` 前缀用于指定工作目录。
 - `--idempotency-key` 用于幂等去重：重复 create 返回同一任务 id，不重复执行。
 - `--initial-status` 可选：`blocked` 或 `running`（默认 `ready`，实测 VALID_STATUSES 九态），通常不需要显式传。`create` 支持的全部合法参数以 `hermes kanban create --help` 为准。
-- `--skill <name>`（v1.3.6 方案 C）：技能复制到 /home/taxol/DSH/skills-shared/ 共享区（DSH 领地），任务正文只写路径；skill 更新后需重新复制。不跨域读 ~/.hermes。
+- `--skill <name>`（v1.3.6 方案 C）：技能复制到 $DSH_WORKSPACE/skills-shared/ 共享区（DSH 领地），任务正文只写路径；skill 更新后需重新复制。不跨域读 ~/.hermes。
 - `--resume <关键词>`（v1.3.0 会话继承）：用于延续之前对话的上下文（如"继续讨论X"）。关键词匹配历史会话标题；显式 session-id 更精确。继承的会话 cwd 沿用原值（resume 会话工作目录不可变）。
