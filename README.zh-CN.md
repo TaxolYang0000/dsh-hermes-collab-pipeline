@@ -107,6 +107,9 @@ hermes config set features.external_event_steer true
 # 带技能下发（把 Hermes skill 复制到共享区给 DSH 参考）
 /dsh-send --skill two-step-t1-dip-buy-strategy 用这个策略分析当前行情
 
+# 会话继承（续接之前对话的上下文，v0.2.0 新功能）
+/dsh-send --resume 继续讨论X 再分析一下刚才的结论
+
 # 指定工作目录
 /dsh-send --workspace dir:$DSH_WORKSPACE/weekly-reports 写本周周报
 
@@ -168,6 +171,7 @@ hermes config set features.external_event_steer true
 
 ## 相关文档
 
+- `CHANGELOG.md` — 更新日志（版本历史 + 新内容）
 - `INSTALL-安装指南.md` — 从零安装完整步骤 + 已知坑
 - `dsh-side/docs/DSH-Hermes双Agent协作管道-能力盘点与可行性.md` — 项目缘起（DSH 能力盘点 + 协作可行性分析）
 - `dsh-side/plugins/dsh-kanban-watcher/README.md` — watcher 插件详细文档（配置/使用/安全）
