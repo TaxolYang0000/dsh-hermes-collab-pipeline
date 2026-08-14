@@ -61,7 +61,7 @@ Four key mechanisms:
 
 ## Quick start
 
-> 📖 **New-user zero-to-install guide: [INSTALL-安装指南.md](INSTALL-安装指南.md)** (kanban init, plugin mount, skill deploy, verification, known pitfalls)
+> 📖 **New-user zero-to-install guide: [INSTALL.md](INSTALL.md)** (kanban init, plugin mount, skill deploy, verification, known pitfalls)
 >
 > 🤖 **AI Agent users (another Hermes/DSH/Claude Code instance)**: just run
 > `./install.sh --yes` — fully automatic, idempotent, re-runnable. It auto-detects
@@ -167,7 +167,7 @@ Repository code and docs are sanitized: real machine paths appear as `$VAR` plac
 
 ## Docs
 
-- `INSTALL-安装指南.md` — full zero-to-install guide + known pitfalls
+- `INSTALL.md` — full zero-to-install guide + known pitfalls (中文版: [INSTALL-安装指南.md](INSTALL-安装指南.md))
 - `dsh-side/docs/DSH-Hermes双Agent协作管道-能力盘点与可行性.md` — project origin (DSH capability survey + collaboration feasibility)
 - `dsh-side/plugins/dsh-kanban-watcher/README.md` — watcher plugin detailed docs (config/usage/security)
 - `hermes-side/README.md` — external_event_steer internals & security design (done-file untrusted input, seen baseline)

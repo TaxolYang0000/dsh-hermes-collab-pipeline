@@ -1,5 +1,7 @@
 # 安装指南（面向新人 · 从零复现）
 
+> **English version: [INSTALL.md](INSTALL.md)**
+
 > 目标：让一个**全新环境**（没装过 DSH/Hermes 协作管道）的人，按本文档能完整复现。
 > 前提：一台 Linux/WSL 机器，能访问 GitHub，有 Node.js 18+ 和 Python 3.10+。
 
