@@ -1,4 +1,6 @@
-# DSH ↔ Hermes Dual-Agent Collaboration Pipeline
+# Agent Federation Platform
+
+> Bring your own host agent, we provide the federation.
 
 > **中文版 README 见 [README.zh-CN.md](README.zh-CN.md)**
 
@@ -12,7 +14,49 @@
 
 > 📋 **License & attribution**: MIT. Code adapted from DeepSeek Harness, Hermes Agent, and dsh-harness-mcp-server (all MIT) — see [NOTICE-借鉴与合规.md](NOTICE-借鉴与合规.md). Related project: [Ericwong5021/dsh-kanban](https://github.com/Ericwong5021/dsh-kanban) (similar name, different type: React UI kanban vs our background executor).
 
-> **English README below.** Let **Hermes Agent** (an interactive AI agent) and **DSH / DeepSeek Harness** (a Web-based AI agent) work together like two teammates: Hermes dispatches tasks and reviews results; DSH executes them automatically in its Web GUI, writes results back to a kanban board, and notifies Hermes on completion. Fully unattended — you only look at the results.
+> **English README below.** This repository currently ships a dual-agent pipeline (Hermes orchestrates, DSH executes via a kanban queue) and grows toward an agent federation: any AI coding agent joins through the same queue, cross-reviews each other's work, and deliberates through a tiered debate protocol — with you as the final decision-maker.
+
+## Motivation
+
+A single agent working alone is bounded by its own model: biases uncorrected, blind spots unfilled, hard problems reasoned through only from one perspective. The value of multi-agent collaboration is precisely this — heterogeneous agents reviewing each other can correct the self-confirmation bias of a single agent (validated by the MAD paper).
+
+The project's current form is two agents collaborating: Hermes and DSH. Hermes writes tasks into a kanban queue, DSH claims and executes them in its Web GUI, writes results back to the board, and notifies Hermes on completion. The full chain has been validated in practice: a reliable task state machine (claims are locked — the same task cannot be executed twice; tasks recover after crashes), fully unattended operation (trigger-file event driving plus permission presets), persistent sessions you can revisit, automatic completion notifications, cross-task session inheritance, and basic cross-review (one party produces, another independently reviews).
+
+But the pipeline has two unresolved problems:
+
+1. Execution is locked to a single agent type. Adding Codex means writing another watcher — every new agent adds linear cost.
+2. There is no negotiation channel. Board comments are asynchronous notes, not structured round-based deliberation — opinions cannot iterate or converge.
+
+There is also a principled ceiling: the false consensus of two-plate mutual grinding.
+
+In precision machining, standard flat surfaces are made by scraping. Two plates ground against each other can never yield a high-precision plane: if one is convex and the other concave, they will mate perfectly — yet neither is flat; the error is not removed, it is mutually adapted. Three plates ground in a closed loop (A against B, B against C, C against A) are required: any convexity on one plate is exposed by the other two, and after cycles all three converge toward a true plane.
+
+Two-agent cross-review is two-plate grinding. Hermes reviews DSH and DSH reviews Hermes — two agents can validate each other's blind spots and reach a conclusion that is "consistent yet wrong": they did not find the correct answer, they adapted to each other's errors. Breaking false consensus requires a closed loop: at least three parties reviewing in a cycle (A reviews B, B reviews C, C reviews A), so any single point of error is caught by a third party that does not share its bias.
+
+This is the deeper reason for a federation. Not one more agent doing work — a closed loop that forces "consensus" through three-way validation, leaving errors nowhere to hide. Heterogeneity (cross-model pairing) lowers the probability of shared blind spots; closure (three-way cycling) removes the freedom of false consensus — both matter, closure is the essence.
+
+Others are pursuing similar directions, validating the path:
+
+- win4r/team-tasks: a debate mode (round → collect → cross-review → synthesize) nearly identical to the deliberation protocol we plan — the protocol is implementable.
+- Skytliang/Multi-Agents-Debate (MAD): the paper shows multi-agent debate corrects single-agent bias, rigidity, and blind spots — the motivation holds.
+- thunlp/ChatEval: multi-agent debate for LLM evaluation — supporting evidence.
+- omnigent-ai/omnigent: a meta-harness mixing Claude Code, Codex, Cursor, Hermes in one session, "ask one agent to review another's work" — arbitrary mixing works.
+- Detrol/quorum-cli: a multi-model debate CLI with seven discussion methods — debate interaction is already productized.
+- majiayu000/harness: a Rust control plane orchestrating Claude Code/Codex fleets with policy and review — the review layer can be engineered.
+- Happenmass/omux: tmux-based orchestration of parallel CLI coding agents — parallel execution can run unattended.
+
+But none of them combine all three things we consider core: a persisted queue with a hard state machine (kanban), deliberately heterogeneous execution (cross-model pairing), and a human-gated final decision. We borrow their proven protocols and build the record surface ourselves. That is why this repository exists.
+
+## Overview
+
+Agent Federation Platform is a generic multi-agent collaboration layer. It federates any AI coding agents through a shared kanban queue, lets them cross-review each other's work, and runs tiered multi-agent debate for high-stakes decisions — always with a human in the loop. It is orchestrator-agnostic: bring your own host agent (the reference deployment uses Hermes), we provide the federation machinery.
+
+Core capabilities:
+
+- **Shared queue**: kanban task state machine — claims are locked, crash-recoverable, fully audited.
+- **Cross-review**: one party produces, another independently reviews; implementation and review are always separated.
+- **Tiered debate**: direct execution / dual-model cross-review / full debate, gated by task value.
+- **Human final say**: any unified recommendation is only a recommendation — it executes after your confirmation.
 
 ## When to use this
 
@@ -135,7 +179,7 @@ hermes config set features.external_event_steer true
 /inbox
 ```
 
-## Design principles (dual-agent review gate)
+## Design principles (cross-agent review gate)
 
 - **Territory-based division of labor**: whoever owns the environment owns the work — DSH-related code is written by DSH, Hermes-related by Hermes; after the implementer produces output, the other agent independently reviews it (security / error handling / scope / dependency compatibility)
 - **Mutual restart**: Hermes restarts DSH and DSH restarts Hermes; a task to restart the other process must never go into the board for the watcher to self-execute (the watcher runs inside the DSH host — killing the host kills the executor)
@@ -196,3 +240,12 @@ Repository code and docs are sanitized: real machine paths appear as `$VAR` plac
 - `dsh-side/plugins/dsh-kanban-watcher/README.md` — watcher plugin detailed docs (config/usage/security)
 - `hermes-side/README.md` — external_event_steer internals & security design (done-file untrusted input, seen baseline)
 - `hermes-side/PR-提交说明.md` — material for filing an issue with Hermes Agent
+
+## Vision
+
+Roadmap from the current dual-agent pipeline to full federation:
+
+- **P0 — Generic drivers**: refactor `dsh-kanban-watcher` into a driver interface (claim → execute → report) so any agent joins via one driver file (DSH, Codex, Claude Code, custom).
+- **P1 — Debate state machine on kanban**: round → collect positions → cross-review → synthesize, adopted from win4r/team-tasks.
+- **P2 — Tiered deliberation**: direct execution / dual-model cross-review / full debate, gated by task value; model routing + driver registry.
+- **P3 — Kanban board visualization panel**: show task state, model, duration, dependencies and debate rounds in the DSH Web GUI.
