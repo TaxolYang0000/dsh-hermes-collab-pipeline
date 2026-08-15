@@ -196,21 +196,24 @@ EOF
   fi
 fi
 
-# ---------- 4. 应用 Hermes patch（幂等） ----------
+# ---------- 4. 应用 Hermes patch（可选增强，失败不阻断） ----------
+# ⚠️ 该 patch 修改 Hermes 核心源码，仅提供「CLI 自动弹【外部通知】」这一增强。
+# 不应用 patch，核心管道（任务下发 → DSH 执行 → 看板回写）依然 100% 工作，
+# 只是需要手动 `hermes kanban --board dsh show <id>` 查看结果。
 PATCH_FILE="$REPO_DIR/hermes-side/hermes-external-event-steer.patch"
-if confirm "应用 external_event_steer patch 到 Hermes 源码"; then
+if confirm "应用 external_event_steer patch 到 Hermes 源码（可选，跳过不影响核心功能）"; then
   if grep -q '_drain_done_notifications' "$HERMES_AGENT_DIR/cli.py" 2>/dev/null; then
     warn "patch 已应用，跳过"
   else
     out=$(run bash -c "cd '$HERMES_AGENT_DIR' && git apply --check '$PATCH_FILE'" 2>&1)
     if [ $? -ne 0 ]; then
-      err "git apply --check 失败（版本差异？）："
-      echo "$out"
-      err "处理：见 INSTALL-安装指南.md 的「patch 冲突处理」节（git apply -3 或手动改）"
-      exit 1
+      warn "git apply --check 失败（版本差异？）——跳过 patch，核心功能不受影响："
+      echo "$out" | head -5
+      warn "如需自动通知，见 INSTALL-安装指南.md 的「patch 冲突处理」节（git apply -3 或手动改）"
+    else
+      out=$(run bash -c "cd '$HERMES_AGENT_DIR' && git apply '$PATCH_FILE'" 2>&1)
+      if [ $? -eq 0 ]; then log "patch 已应用"; else warn "应用失败（跳过，核心功能不受影响）: $out"; fi
     fi
-    out=$(run bash -c "cd '$HERMES_AGENT_DIR' && git apply '$PATCH_FILE'" 2>&1)
-    if [ $? -eq 0 ]; then log "patch 已应用"; else err "应用失败: $out"; exit 1; fi
   fi
 fi
 

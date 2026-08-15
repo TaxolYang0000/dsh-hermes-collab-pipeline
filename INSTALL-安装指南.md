@@ -92,7 +92,9 @@ nohup dsh web --port 3080 > /tmp/dsh-web.log 2>&1 &
 > ⚠️ 重要：`triggerDir`、`allowedOutputDirs` 里的路径**必须按你的机器改**。
 > 插件配置的 `hermesBin` 默认是 `~/.local/bin/hermes`，如果你的 hermes 在别处也要改。
 
-## 第 5 步：Hermes 侧——应用 patch + 部署技能
+## 第 5 步：Hermes 侧——应用补丁（可选）+ 部署技能
+
+> 补丁是**可选的**。不打补丁，管道 100% 工作（下发 → 执行 → 看板回写），只是少了 CLI 自动弹出【外部通知】。如果 `git apply` 失败（Hermes 版本差异），跳过本步即可——只有确实想要自动弹出时才看「patch 冲突处理」。
 
 ```bash
 # 4.1 应用外部事件注入 patch（改 Hermes 源码）

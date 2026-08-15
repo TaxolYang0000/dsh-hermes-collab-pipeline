@@ -94,7 +94,12 @@ nohup dsh web --port 3080 > /tmp/dsh-web.log 2>&1 &
 > machine. The plugin's default `hermesBin` is `~/.local/bin/hermes` — change it
 > if your hermes lives elsewhere.
 
-## Step 5: Hermes side — apply the patch + deploy the skill
+## Step 5: Hermes side — apply the patch (OPTIONAL) + deploy the skill
+
+> The patch is **optional**. Without it, the pipeline works 100% (dispatch → execute →
+> board write-back); only the CLI auto-popup of 【外部通知】 is missing. If `git apply`
+> fails (Hermes version drift), skip this step — see "Patch conflict handling" only if you
+> really want the auto-popup.
 
 ```bash
 # 5.1 Apply the external-event-injection patch (modifies Hermes source)

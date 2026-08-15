@@ -4,6 +4,12 @@
 
 > ⚠️ **AI 生成代码声明**：本仓库所有代码均由 DeepSeek 模型生成，**未经人工审查**。使用风险自负；部署前请人工审查关键路径（安全、权限、文件操作）。
 
+> ⚠️ **内核补丁提醒（安装前必读）**：仓库里有一个可选组件——`hermes-side/hermes-external-event-steer.patch`——它修改 **Hermes 核心源码**（`cli.py` + `hermes_cli/config_defaults.py`），用于增加"CLI 自动弹出【外部通知】"这个增强。该补丁 **可选且默认关闭**：
+> - **不打补丁，核心管道 100% 正常**（任务下发 → DSH 执行 → 结果回写看板）。只是需要用 `hermes kanban --board dsh show <id>` 手动查看结果，而不是自动弹出。
+> - 补丁**依赖 Hermes 版本**：针对特定版本编写。如果 `git apply` 失败（版本差异），跳过即可——管道照常工作，只少了自动弹出。
+> - `install.sh` 在补丁无法应用时**不会失败**——它会警告并继续。
+> - 详见下方「什么需要内核补丁？」。
+
 > 📋 **许可证与借鉴声明**：MIT。代码改编自 DeepSeek Harness、Hermes Agent、dsh-harness-mcp-server（均为 MIT）——详见 [NOTICE-借鉴与合规.md](NOTICE-借鉴与合规.md)。同领域相关项目：[Ericwong5021/dsh-kanban](https://github.com/Ericwong5021/dsh-kanban)（同名不同类型：React UI 看板 vs 我们的后台执行插件）。
 
 让 **Hermes Agent**（交互式 AI agent）和 **DSH / DeepSeek Harness**（Web 端 AI agent）
@@ -61,6 +67,18 @@
     ├── PR-提交说明.md                 提 Hermes issue 用的材料
     └── README.md                      用法说明
 ```
+
+## 什么需要内核补丁？
+
+| 能力 | 需要内核补丁？ | 不打补丁怎么工作 |
+|---|---|---|
+| 给 DSH 下发任务（`/dsh-send`） | ❌ 不需要 | 纯 Hermes 技能 + kanban CLI——始终可用 |
+| DSH 在 Web GUI 执行、回写看板 | ❌ 不需要 | watcher 插件做的——始终可用 |
+| 查看结果（`hermes kanban --board dsh show <id>`、`/inbox`） | ❌ 不需要 | 看板评论——始终可用 |
+| DSH 写 done 文件（`~/.dsh/kanban-done/`） | ❌ 不需要 | watcher 插件功能——始终可用 |
+| **Hermes CLI 完成时自动弹出【外部通知】** | ✅ **需要** | 手动查看板代替 |
+
+**结论**：内核补丁只加了最后一行（自动弹出）。其他都是插件/技能/配置层，任何 Hermes 版本都可用。跳过补丁只失去自动弹出，其他不受影响。
 
 ## 快速开始
 
