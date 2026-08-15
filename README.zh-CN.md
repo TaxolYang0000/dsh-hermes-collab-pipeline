@@ -1,4 +1,6 @@
-# DSH ↔ Hermes 双 Agent 协作管道
+# Agent Federation Platform
+
+> 自带宿主 agent，我们提供联邦机制。
 
 > **English README: [README.md](README.md)**
 
@@ -12,9 +14,49 @@
 
 > 📋 **许可证与借鉴声明**：MIT。代码改编自 DeepSeek Harness、Hermes Agent、dsh-harness-mcp-server（均为 MIT）——详见 [NOTICE-借鉴与合规.md](NOTICE-借鉴与合规.md)。同领域相关项目：[Ericwong5021/dsh-kanban](https://github.com/Ericwong5021/dsh-kanban)（同名不同类型：React UI 看板 vs 我们的后台执行插件）。
 
-让 **Hermes Agent**（交互式 AI agent）和 **DSH / DeepSeek Harness**（Web 端 AI agent）
-像两个同事一样协作：Hermes 负责下发任务、审核结果；DSH 在 Web GUI 里自动执行、
-回写看板、通知完成。全程无人值守，你只需要看结果。
+本仓库当前实现的是双 agent 管道（Hermes 编排、DSH 经 kanban 队列执行），并走向 agent 联邦：任意 AI 编码 agent 通过同一队列接入，交叉审查彼此产出，通过分级辩论协议审议——由你作为最终决策者。
+
+## 动机
+
+一个 agent 独立干活，能力边界就是模型边界。偏见没人纠正，盲区没人填补，问题再复杂也只能自己硬想。多 agent 协作的价值就在这里：异构的 agent 互相审查，能纠正单 agent 的自证偏差（MAD 论文已验证）。
+
+这个项目现在的形态是 Hermes 和 DSH 两个 agent 协作。Hermes 把任务写进 kanban 队列，DSH 在 Web GUI 里认领执行，结果回写看板，完成后通知 Hermes。整条链路已经实测验证：任务状态机可靠（认领有锁，同一个任务不会被两个 agent 重复执行；崩溃后任务能恢复）、全程无人值守（触发文件事件驱动加权限预设）、执行会话可回看、完成自动通知、跨任务会话继承、基础交叉审查（实现方产出，另一方独立审）。
+
+但这条管道有两个没解决的问题：
+
+1. 执行锁死在单一 agent 类型。想加 Codex 就得再写一个 watcher，每加一个 agent 成本线性增长。
+2. 没有协商通道。看板评论是异步留言，不是结构化的轮次审议，意见没法迭代、没法收敛。
+
+还有一个原理性的天花板：双板互审的虚假共识。
+
+精密机加工中，标准平面的制作采用刮研工艺。两块平板互研，永远得不到高精度平面：如果一块凸、一块凹，它们互研会完美贴合，但两块都不是平面，误差被互相适应了。三块平板闭环互研（A对B、B对C、C对A）才行：任何一块的凸起都会被另外两块暴露，三轮循环下来三块都逼近真平面。
+
+双 agent 互审就是双板互研。Hermes 审 DSH、DSH 审 Hermes，两个 agent 可以互相认可彼此的盲区，达成一个"一致但都错"的结论——它们不是找到了正确答案，是互相适应了错误。要破除虚假共识，需要闭环：至少三方循环互审（A审B、B审C、C审A），任何单点的错误都会被与它不互补的第三方抓住。
+
+这就是联邦的深层理由。不是多一个 agent 干活，是闭环互审让"一致"必须经过三方验证，误差无处藏。异构（跨模型系）降低同源盲区的概率，闭环（三方循环）消除虚假共识的自由度——两个都要，闭环是本质。
+
+类似的思路别人也在做，验证了方向可行：
+
+- win4r/team-tasks：辩论模式（round → collect → cross-review → synthesize）和我们要做的审议协议几乎一样，证明协议可落地。
+- Skytliang/Multi-Agents-Debate (MAD)：论文证明多 agent 辩论能纠正单 agent 的偏见、僵化和盲区，证明动机成立。
+- thunlp/ChatEval：多 agent 辩论用于 LLM 评估，同源佐证。
+- omnigent-ai/omnigent：meta-harness，一个会话里混排 Claude Code、Codex、Cursor、Hermes，让一个 agent 审查另一个的产出，证明任意混排可行。
+- Detrol/quorum-cli：多模型辩论 CLI，七种讨论方法，证明辩论交互已经产品化。
+- majiayu000/harness：Rust 控制平面，带策略和审查的 Claude Code/Codex 编队，证明审查层可以工程化。
+- Happenmass/omux：基于 tmux 的并行 CLI 编码 agent 编排，证明并行执行可以无人值守。
+
+但它们没有一个同时具备我们认为核心的三样东西：带硬状态机的持久化队列（kanban）、刻意异构的执行（跨模型配对）、人类把关的最终决策。别人的协议我们借鉴，记录面我们自己搭。这就是这个仓库存在的理由。
+
+## 综述
+
+Agent Federation Platform 是通用多智能体协作层。它通过共享 kanban 队列联邦任意 AI 编码 agent，让它们交叉审查彼此产出，并对高风险决策运行分级多智能体辩论，始终由人类把关。平台与编排者无关：自带宿主 agent（参考部署使用 Hermes），平台提供联邦机制。
+
+核心能力：
+
+- 共享队列：kanban 任务状态机，认领有锁、崩溃可恢复、审计完整。
+- 交叉审查：实现方产出，另一方独立审，强制实现与审查分离。
+- 分级辩论：直接执行、双模型互审、全量辩论三级，按任务价值启用。
+- 人类终审：任何统一建议都只是建议，确认后才执行。
 
 ## 适合什么情况
 
@@ -135,7 +177,7 @@ hermes config set features.external_event_steer true
 /inbox
 ```
 
-## 设计原则（双 Agent 评审门）
+## 设计原则（跨 agent 评审门）
 
 - **属地分工**：谁的环境谁是主体——DSH 相关归 DSH 写、Hermes 相关归 Hermes 写，
   实现方产出后另一 agent 独立审查（安全/错误处理/作用域/依赖兼容）
@@ -195,3 +237,12 @@ hermes config set features.external_event_steer true
 - `dsh-side/plugins/dsh-kanban-watcher/README.md` — watcher 插件详细文档（配置/使用/安全）
 - `hermes-side/README.md` — external_event_steer 原理与安全设计（done 文件不可信输入、seen baseline）
 - `hermes-side/PR-提交说明.md` — 给 Hermes Agent 提 issue 的材料
+
+## 展望
+
+从双 agent 管道到完整联邦的路线图：
+
+- P0 通用 driver。把 dsh-kanban-watcher 重构为 driver 接口（认领→执行→回写），任意 agent 通过一个 driver 文件接入（DSH、Codex、Claude Code、自定义）。
+- P1 kanban 辩论状态机。round → collect → cross-review → synthesize，借鉴 win4r/team-tasks 的 debate 模式。
+- P2 分级审议。直接执行 / 双模型互审 / 全量辩论，按任务价值启用；模型路由加 driver 注册表。
+- P3 看板可视化面板。在 DSH Web GUI 中展示任务状态、模型、耗时、依赖与辩论轮次。
