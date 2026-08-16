@@ -47,6 +47,8 @@
 
 但它们没有一个同时具备我们认为核心的三样东西：带硬状态机的持久化队列（kanban）、刻意异构的执行（跨模型配对）、人类把关的最终决策。别人的协议我们借鉴，记录面我们自己搭。这就是这个仓库存在的理由。
 
+本动机的完整论证详见文章：**[Coding Agent 的下一步要怎么走——为什么我们需要一个多agent讨论架构](docs/coding-agent-下一步要怎么走.md)**（原始版本为中文；英文版：[Where Should Coding Agent Go Next?](docs/coding-agent-whats-next.md)）。文章完整展开本文动机、批判自身假设，并给出该架构真正成立的适用条件。
+
 ## 综述
 
 Agent Federation Platform 是通用多智能体协作层。它通过共享 kanban 队列联邦任意 AI 编码 agent，让它们交叉审查彼此产出，并对高风险决策运行分级多智能体辩论，始终由人类把关。平台与编排者无关：自带宿主 agent（参考部署使用 Hermes），平台提供联邦机制。
