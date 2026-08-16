@@ -47,6 +47,8 @@ Others are pursuing similar directions, validating the path:
 
 But none of them combine all three things we consider core: a persisted queue with a hard state machine (kanban), deliberately heterogeneous execution (cross-model pairing), and a human-gated final decision. We borrow their proven protocols and build the record surface ourselves. That is why this repository exists.
 
+For the full argument behind this motivation, see the article: **[Where Should Coding Agent Go Next? — Why We Need a Multi-Agent Discussion Architecture](docs/coding-agent-whats-next.md)** (original in Chinese: [Coding Agent 的下一步要怎么走](docs/coding-agent-下一步要怎么走.md)). It develops the motivation in full, critiques its own assumptions, and specifies the conditions under which the architecture actually holds.
+
 ## Overview
 
 Agent Federation Platform is a generic multi-agent collaboration layer. It federates any AI coding agents through a shared kanban queue, lets them cross-review each other's work, and runs tiered multi-agent debate for high-stakes decisions — always with a human in the loop. It is orchestrator-agnostic: bring your own host agent (the reference deployment uses Hermes), we provide the federation machinery.
